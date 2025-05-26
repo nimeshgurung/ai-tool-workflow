@@ -1,5 +1,5 @@
 import type { Node, Edge } from 'reactflow';
-import type { ToolDefinition } from './tool';
+import type { ToolDefinition, AgentConfig } from './tool';
 
 // Extended React Flow types with our tool data
 export interface ToolNodeData {
@@ -9,6 +9,8 @@ export interface ToolNodeData {
   inputSchema: string;
   outputSchema: string;
   category?: string;
+  type?: 'tool' | 'agent';
+  agentConfig?: AgentConfig; // Agent-specific configuration
 }
 
 export type ToolNode = Node<ToolNodeData>;

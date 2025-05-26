@@ -7,6 +7,16 @@ export interface ToolDefinition {
   outputSchema: string; // JSON schema as string
   category?: string;
   version?: string;
+  type?: 'tool' | 'agent'; // Distinguish between tools and agents
+}
+
+// Agent-specific configuration
+export interface AgentConfig {
+  instructions: string;
+  availableTools: string[]; // Array of tool IDs that this agent can use
+  modelProvider?: string;
+  modelName?: string;
+  apiKey?: string;
 }
 
 // API response types
@@ -16,5 +26,5 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export interface ToolsApiResponse extends ApiResponse<ToolDefinition[]> {}
-export interface ToolApiResponse extends ApiResponse<ToolDefinition> {}
+export type ToolsApiResponse = ApiResponse<ToolDefinition[]>;
+export type ToolApiResponse = ApiResponse<ToolDefinition>;

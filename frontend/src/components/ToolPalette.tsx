@@ -10,6 +10,7 @@ import {
   Divider,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
+import { SmartToy as AgentIcon, Build as ToolIcon } from '@mui/icons-material';
 import { useTools } from '../hooks/useTools';
 import type { ToolDefinition } from '../types/tool';
 
@@ -39,6 +40,30 @@ const useStyles = makeStyles()((theme) => ({
     '&:active': {
       cursor: 'grabbing',
     },
+  },
+  agentCard: {
+    marginBottom: theme.spacing(1),
+    cursor: 'grab',
+    transition: 'all 0.2s ease-in-out',
+    border: `1px solid ${theme.palette.secondary.main}`,
+    backgroundColor: theme.palette.secondary.light,
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: theme.shadows[4],
+    },
+    '&:active': {
+      cursor: 'grabbing',
+    },
+  },
+
+  itemHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.5),
+    marginBottom: theme.spacing(0.5),
+  },
+  itemIcon: {
+    fontSize: '1rem',
   },
   toolContent: {
     padding: `${theme.spacing(1.5)} !important`,
@@ -135,15 +160,22 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({ onToolDragStart }) => {
       {tools.map((tool) => (
         <Card
           key={tool.id}
-          className={classes.toolCard}
+          className={tool.type === 'agent' ? classes.agentCard : classes.toolCard}
           draggable
           onDragStart={(e) => handleDragStart(e, tool)}
           onDragEnd={handleDragEnd}
         >
           <CardContent className={classes.toolContent}>
-            <Typography variant="subtitle2" className={classes.toolName}>
-              {tool.name}
-            </Typography>
+            <div className={classes.itemHeader}>
+              {tool.type === 'agent' ? (
+                <AgentIcon className={classes.itemIcon} color="secondary" />
+              ) : (
+                <ToolIcon className={classes.itemIcon} color="primary" />
+              )}
+              <Typography variant="subtitle2" className={classes.toolName}>
+                {tool.name}
+              </Typography>
+            </div>
             <Typography variant="body2" className={classes.toolDescription}>
               {tool.description}
             </Typography>

@@ -53,7 +53,7 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: theme.palette.success.main,
   },
   handleSource: {
-    backgroundColor: theme.palette.warning.main,
+    backgroundColor: theme.palette.success.main,
   },
 }));
 

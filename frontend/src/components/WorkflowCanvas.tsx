@@ -9,6 +9,7 @@ import {
   type Connection,
   type Node,
   type NodeTypes,
+  type Edge,
   Background,
   Controls,
   MiniMap,
@@ -18,6 +19,7 @@ import { makeStyles } from 'tss-react/mui';
 import { SaveAlt as SaveIcon } from '@mui/icons-material';
 
 import ToolNode from './ToolNode';
+import AgentNode from './AgentNode';
 import type { ToolNodeData, WorkflowSubmission } from '../types/workflow';
 import type { ToolDefinition } from '../types/tool';
 import ApiService from '../services/api';
@@ -54,6 +56,7 @@ const useStyles = makeStyles()((theme) => ({
 // Define custom node types
 const nodeTypes: NodeTypes = {
   toolNode: ToolNode,
+  agentNode: AgentNode,
 };
 
 let nodeId = 0;
@@ -76,9 +79,110 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
 
   const { project } = useReactFlow();
 
+    const onEdgesDelete = useCallback(
+    (deletedEdges: Edge[]) => {
+      deletedEdges.forEach((edge) => {
+        const sourceNode = nodes.find(node => node.id === edge.source);
+        const targetNode = nodes.find(node => node.id === edge.target);
+
+        // Remove tool assignment when tool-agent edge is deleted
+        if (sourceNode?.type === 'toolNode' && targetNode?.type === 'agentNode') {
+          setNodes((nds) =>
+            nds.map((node) => {
+              if (node.id === targetNode.id && node.data.agentConfig) {
+                const currentTools = node.data.agentConfig.availableTools || [];
+                const toolId = sourceNode.data.toolId;
+
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    agentConfig: {
+                      ...node.data.agentConfig,
+                      availableTools: currentTools.filter((id: string) => id !== toolId)
+                    }
+                  }
+                };
+              }
+              return node;
+            })
+          );
+
+          setNotification({
+            open: true,
+            message: `Tool "${sourceNode.data.toolName}" removed from agent`,
+            severity: 'info',
+          });
+        }
+      });
+    },
+    [nodes, setNodes, setNotification]
+  );
+
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => {
+      // Validate connection rules
+      const sourceNode = nodes.find(node => node.id === params.source);
+      const targetNode = nodes.find(node => node.id === params.target);
+
+      if (!sourceNode || !targetNode) return;
+
+      // Rule: Tools cannot connect to other tools
+      if (sourceNode.type === 'toolNode' && targetNode.type === 'toolNode') {
+        setNotification({
+          open: true,
+          message: 'Tools cannot be connected directly to other tools. Connect tools to agents instead.',
+          severity: 'error',
+        });
+        return;
+      }
+
+      // Rule: Only tools can connect to agents (not other agents)
+      if (targetNode.type === 'agentNode' && sourceNode.type === 'agentNode') {
+        setNotification({
+          open: true,
+          message: 'Agents cannot be connected to other agents directly.',
+          severity: 'error',
+        });
+        return;
+      }
+
+      // Auto-assign tool to agent when connected
+      if (sourceNode.type === 'toolNode' && targetNode.type === 'agentNode') {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === targetNode.id && node.data.agentConfig) {
+              const currentTools = node.data.agentConfig.availableTools || [];
+              const toolId = sourceNode.data.toolId;
+
+              // Only add if not already assigned
+              if (!currentTools.includes(toolId)) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    agentConfig: {
+                      ...node.data.agentConfig,
+                      availableTools: [...currentTools, toolId]
+                    }
+                  }
+                };
+              }
+            }
+            return node;
+          })
+        );
+
+        setNotification({
+          open: true,
+          message: `Tool "${sourceNode.data.toolName}" assigned to agent`,
+          severity: 'success',
+        });
+      }
+
+      setEdges((eds) => addEdge(params, eds));
+    },
+    [setEdges, setNodes, nodes, setNotification]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -113,9 +217,12 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
           y: event.clientY - reactFlowBounds.top,
         });
 
+        let nodeType = 'toolNode';
+        if (tool.type === 'agent') nodeType = 'agentNode';
+
         const newNode: Node<ToolNodeData> = {
           id: getId(),
-          type: 'toolNode',
+          type: nodeType,
           position,
           data: {
             toolId: tool.id,
@@ -124,6 +231,11 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
             inputSchema: tool.inputSchema,
             outputSchema: tool.outputSchema,
             category: tool.category,
+            type: tool.type,
+            agentConfig: tool.type === 'agent' ? {
+              instructions: 'You are a helpful assistant that can use tools to complete tasks.',
+              availableTools: []
+            } : undefined,
           },
         };
 
@@ -215,6 +327,7 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           fitView
