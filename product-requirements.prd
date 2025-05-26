@@ -1,0 +1,127 @@
+Project Overview: AI Workflow Builder for Non-Technical Users
+The primary goal of this project is to develop a sophisticated, yet user-friendly, workflow-based system. This system will empower non-technical users to visually design, construct, and manage automated processes. It leverages a React Flow-based user interface for intuitive workflow design, incorporates app-specific AI tools from a Master Component Palette (MCP), and uses mastra.ai as the robust backend execution engine. A custom backend API layer will mediate communication, translating visual designs into executable mastra.ai workflows and managing their lifecycle.
+
+The core aim is to abstract the complexity of AI workflow automation, making powerful AI capabilities accessible through an intuitive drag-and-drop visual paradigm.
+
+README.md: Initial Coding Phase Task List
+This document outlines the initial coding tasks to build the foundational slice of the AI Workflow Builder application. The focus is on establishing the basic scaffolding for the frontend and backend, enabling the display of tools, allowing users to create simple workflows visually, and transmitting this workflow data to the backend for initial processing.
+
+Task Group 1: Backend Setup & Core Services 🏗️
+1.1. Initialize Backend Project:
+
+[ ] Set up a new Node.js project (e.g., using Express.js or NestJS, as recommended in the blueprint for alignment with mastra.ai's JS client and Zod for validation).
+
+[ ] Configure basic project structure (folders for routes, controllers/services, utilities, etc., as per framework conventions).
+
+[ ] Install necessary initial dependencies (e.g., express, cors, zod). Consider installing the mastra.ai client SDK early if planning initial integration tests.
+
+1.2. Implement Tool Definition Service (MCP Integration/Mock):
+
+[ ] Decision Point: Determine if integrating with a live MCP (e.g., mcp.run) immediately or starting with a mock.
+
+[ ] Option A (Live MCP Integration):
+
+[ ] Implement code to fetch tool definitions from the MCP (e.g., using signed SSE URL for mcp.run, or other API mechanisms).
+
+[ ] Implement logic to store/cache these definitions for efficient serving.
+
+[ ] Option B (Mock Service - Recommended for initial speed):
+
+[ ] Create a mock service/module that returns a predefined array of 2-3 sample tool objects.
+
+[ ] Each mock tool object must include fields as defined in Table 3.1.1 of the Strategic Blueprint (e.g., id, name, description, inputSchema (as a Zod schema string or JSON schema), outputSchema (as a Zod schema string or JSON schema)).
+
+1.3. Create API Endpoint: Serve Tool Definitions:
+
+[ ] Implement a GET /api/tools endpoint in your backend.
+
+[ ] This endpoint should retrieve tool definitions (from the live MCP integration or the mock service) and return them as a JSON array.
+
+1.4. Create API Endpoint: Initial Workflow Ingestion & Validation:
+
+[ ] Implement a POST /api/workflows endpoint (as per Section 4.1 of the blueprint).
+
+[ ] Initial Validation: Implement basic structural validation for the incoming ReactFlowJsonObject (e.g., using Zod to check for nodes and edges arrays). Refer to Section 4.2 for validation strategies.
+
+[ ] Logging: Log the validated (or raw, if validation fails with details) JSON payload to the console. This is crucial for inspecting the data structure from React Flow.
+
+[ ] Response: Return a simple success JSON response (e.g., { "message": "Workflow data received and logged", "workflowId": "temp-id", "status": "received" }) or an appropriate error response if validation fails.
+
+Task Group 2: Frontend Setup & Basic React Flow UI 🎨
+2.1. Initialize Frontend Project:
+
+[ ] Set up a new React project (e.g., using Create React App, Vite, or Next.js).
+
+[ ] Install reactflow and its peer dependencies.
+
+[ ] Install an HTTP client library (e.g., axios, or use native fetch).
+
+2.2. Basic React Flow Canvas Setup (referencing Section 3.3 & 8.1):
+
+[ ] Create a main application component.
+
+[ ] Wrap the relevant part of your application with <ReactFlowProvider>.
+
+[ ] Render a basic <ReactFlow> component.
+
+[ ] Implement state management for nodes and edges using useNodesState and useEdgesState hooks.
+
+[ ] Implement basic onNodesChange, onEdgesChange, and onConnect handlers to update state (controlled flow).
+
+2.3. Fetch and Display Tool Palette (referencing Section 3.2 & 8.1):
+
+[ ] In a suitable frontend component (e.g., a sidebar), use useEffect to make an API call to the backend's GET /api/tools endpoint on component mount.
+
+[ ] Store the fetched tool definitions in React state.
+
+[ ] Render a list of draggable items based on the fetched tool definitions. Each item should display at least the tool's name.
+
+2.4. Implement Drag-and-Drop from Palette to Canvas (referencing Section 3.2 & 8.1):
+
+[ ] Implement HTML Drag and Drop API for the tool palette items.
+
+[ ] On the onDrop event on the React Flow canvas:
+
+[ ] Get the React Flow instance (using useReactFlow()).
+
+[ ] Use reactFlowInstance.project({ x: event.clientX, y: event.clientY }) to convert screen coordinates to flow coordinates.
+
+[ ] Create a new node object:
+
+id: Generate a unique ID (e.g., using a timestamp or a simple counter).
+
+type: Use the id or a designated type field from the dragged tool's definition. (Initially, you might use default nodes until custom nodes are built).
+
+position: Use the projected flow coordinates.
+
+data: Store the dragged tool's definition or key properties (like name, id, and its inputSchema/outputSchema for later use in configuration).
+
+[ ] Add the new node to the nodes state.
+
+2.5. Implement Basic Node Connection:
+
+[ ] Ensure the onConnect handler correctly adds new edges to the edges state, allowing users to connect nodes visually.
+
+2.6. Implement Workflow Serialization and Submission (referencing Section 3.4 & 8.1):
+
+[ ] Add a "Save Workflow" or "Submit" button to the UI.
+
+[ ] On button click:
+
+[ ] Get the React Flow instance using useReactFlow().
+
+[ ] Call reactFlowInstance.toObject() to get the ReactFlowJsonObject.
+
+[ ] Make a POST request to the backend's /api/workflows endpoint, sending the serialized ReactFlowJsonObject in the request body.
+
+[ ] Display a simple success/error notification to the user based on the backend's response.
+
+2.7. Initial Custom Node Stubs (Optional, for early visual distinction - referencing Section 3.1 & 8.1):
+
+[ ] Define a basic nodeTypes object with a few distinct types corresponding to your mock tools.
+
+[ ] Create very simple React components for these custom node types (e.g., just displaying the tool name and a unique background color).
+
+[ ] Ensure the type field set when dragging tools from the palette matches these nodeTypes.
+
+This initial set of tasks aims to create a functional loop: fetch tool definitions, display them, allow users to build a visual graph, and send this graph structure to the backend. Subsequent phases will focus on backend transformation logic, mastra.ai integration, detailed custom node development, and UI/UX refinements as outlined in the Strategic Blueprint.

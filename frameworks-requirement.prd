@@ -1,0 +1,10 @@
+Use React
+Use React Router
+Use Typescript
+Use React Flow
+Use Material UI
+Use vite for building the app
+Use tss-react/mui and makeStyles export for all styling
+Use jest and jest.mocked for any unit test to make typesafe.
+Use express, zod and typescript in the backend.
+Also look at mastra docs mcp to see where things overlap.

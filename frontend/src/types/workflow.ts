@@ -1,0 +1,39 @@
+import type { Node, Edge } from 'reactflow';
+import type { ToolDefinition } from './tool';
+
+// Extended React Flow types with our tool data
+export interface ToolNodeData {
+  toolId: string;
+  toolName: string;
+  toolDescription: string;
+  inputSchema: string;
+  outputSchema: string;
+  category?: string;
+}
+
+export type ToolNode = Node<ToolNodeData>;
+
+// Workflow submission types
+export interface WorkflowSubmission {
+  nodes: ToolNode[];
+  edges: Edge[];
+  viewport?: {
+    x: number;
+    y: number;
+    zoom: number;
+  };
+}
+
+// Workflow response from backend
+export interface WorkflowResponse {
+  message: string;
+  workflowId: string;
+  status: 'received' | 'validated' | 'error';
+  errors?: string[];
+}
+
+// Drag and drop types
+export interface DragItem {
+  type: string;
+  tool: ToolDefinition;
+}
