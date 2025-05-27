@@ -42,9 +42,19 @@ const useStyles = makeStyles()((theme) => ({
   },
   section: {
     marginBottom: theme.spacing(1),
+    '& .MuiAccordion-root': {
+      width: '100%',
+      margin: 0,
+    },
+    '& .MuiAccordion-root:before': {
+      display: 'none',
+    },
   },
   sectionHeader: {
     backgroundColor: theme.palette.grey[50],
+    margin: `0 -${theme.spacing(2)}`,
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
     '& .MuiAccordionSummary-content': {
       alignItems: 'center',
       gap: theme.spacing(1),
@@ -52,14 +62,20 @@ const useStyles = makeStyles()((theme) => ({
   },
   sectionContent: {
     padding: `${theme.spacing(1)} 0 !important`,
+    margin: `0 -${theme.spacing(2)}`,
+    paddingLeft: `${theme.spacing(2)} !important`,
+    paddingRight: `${theme.spacing(2)} !important`,
   },
   toolCard: {
     marginBottom: theme.spacing(1),
     cursor: 'grab',
     transition: 'all 0.2s ease-in-out',
+    border: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.background.paper,
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
+      borderColor: theme.palette.primary.main,
     },
     '&:active': {
       cursor: 'grabbing',
@@ -74,7 +90,7 @@ const useStyles = makeStyles()((theme) => ({
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
-      backgroundColor: theme.palette.secondary.light,
+      borderColor: theme.palette.secondary.dark,
     },
     '&:active': {
       cursor: 'grabbing',
@@ -89,7 +105,7 @@ const useStyles = makeStyles()((theme) => ({
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
-      backgroundColor: theme.palette.info.light,
+      borderColor: theme.palette.info.dark,
     },
     '&:active': {
       cursor: 'grabbing',
@@ -104,7 +120,7 @@ const useStyles = makeStyles()((theme) => ({
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
-      backgroundColor: theme.palette.success.light,
+      borderColor: theme.palette.success.dark,
     },
     '&:active': {
       cursor: 'grabbing',
