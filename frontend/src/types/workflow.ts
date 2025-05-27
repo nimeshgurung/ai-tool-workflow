@@ -9,8 +9,16 @@ export interface ToolNodeData {
   inputSchema: string;
   outputSchema: string;
   category?: string;
-  type?: 'tool' | 'agent';
+  type?: 'tool' | 'agent' | 'input' | 'output';
   agentConfig?: AgentConfig; // Agent-specific configuration
+  // Chat node specific properties
+  chatType?: 'input' | 'output';
+  placeholder?: string;
+  systemMessage?: string;
+  // Text node specific properties
+  textType?: 'input' | 'output';
+  format?: 'plain' | 'markdown' | 'json' | 'xml';
+  maxLength?: number;
 }
 
 export type ToolNode = Node<ToolNodeData>;

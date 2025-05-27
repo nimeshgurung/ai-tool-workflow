@@ -20,8 +20,9 @@ import { SaveAlt as SaveIcon } from '@mui/icons-material';
 
 import ToolNode from './ToolNode';
 import AgentNode from './AgentNode';
+import ChatNode from './ChatNode';
+import TextNode from './TextNode';
 import type { ToolNodeData, WorkflowSubmission } from '../types/workflow';
-import type { ToolDefinition } from '../types/tool';
 import ApiService from '../services/api';
 
 // Import React Flow styles
@@ -57,6 +58,8 @@ const useStyles = makeStyles()((theme) => ({
 const nodeTypes: NodeTypes = {
   toolNode: ToolNode,
   agentNode: AgentNode,
+  chatNode: ChatNode,
+  textNode: TextNode,
 };
 
 let nodeId = 0;
@@ -210,7 +213,8 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
       }
 
       try {
-        const tool: ToolDefinition = JSON.parse(toolData);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tool: any = JSON.parse(toolData);
 
         const position = project({
           x: event.clientX - reactFlowBounds.left,
@@ -218,25 +222,47 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
         });
 
         let nodeType = 'toolNode';
-        if (tool.type === 'agent') nodeType = 'agentNode';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nodeData: any = {
+          toolId: tool.id,
+          toolName: tool.name,
+          toolDescription: tool.description,
+          inputSchema: tool.inputSchema || '{}',
+          outputSchema: tool.outputSchema || '{}',
+          category: tool.category,
+          type: tool.type,
+        };
+
+        // Determine node type and configure data
+        if (tool.type === 'agent') {
+          nodeType = 'agentNode';
+          nodeData.agentConfig = {
+            instructions: 'You are a helpful assistant that can use tools to complete tasks.',
+            availableTools: []
+          };
+        } else if (tool.type === 'input') {
+          if (tool.subType === 'chat') {
+            nodeType = 'chatNode';
+            nodeData.chatType = 'input';
+          } else if (tool.subType === 'text') {
+            nodeType = 'textNode';
+            nodeData.textType = 'input';
+          }
+        } else if (tool.type === 'output') {
+          if (tool.subType === 'chat') {
+            nodeType = 'chatNode';
+            nodeData.chatType = 'output';
+          } else if (tool.subType === 'text') {
+            nodeType = 'textNode';
+            nodeData.textType = 'output';
+          }
+        }
 
         const newNode: Node<ToolNodeData> = {
           id: getId(),
           type: nodeType,
           position,
-          data: {
-            toolId: tool.id,
-            toolName: tool.name,
-            toolDescription: tool.description,
-            inputSchema: tool.inputSchema,
-            outputSchema: tool.outputSchema,
-            category: tool.category,
-            type: tool.type,
-            agentConfig: tool.type === 'agent' ? {
-              instructions: 'You are a helpful assistant that can use tools to complete tasks.',
-              availableTools: []
-            } : undefined,
-          },
+          data: nodeData,
         };
 
         setNodes((nds) => nds.concat(newNode));

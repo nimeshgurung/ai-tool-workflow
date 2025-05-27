@@ -8,9 +8,20 @@ import {
   CircularProgress,
   Alert,
   Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { SmartToy as AgentIcon, Build as ToolIcon } from '@mui/icons-material';
+import {
+  SmartToy as AgentIcon,
+  Build as ToolIcon,
+  Chat as ChatIcon,
+  TextFields as TextIcon,
+  ExpandMore as ExpandMoreIcon,
+  Input as InputIcon,
+  Output as OutputIcon,
+} from '@mui/icons-material';
 import { useTools } from '../hooks/useTools';
 import type { ToolDefinition } from '../types/tool';
 
@@ -29,6 +40,19 @@ const useStyles = makeStyles()((theme) => ({
   header: {
     marginBottom: theme.spacing(2),
   },
+  section: {
+    marginBottom: theme.spacing(1),
+  },
+  sectionHeader: {
+    backgroundColor: theme.palette.grey[50],
+    '& .MuiAccordionSummary-content': {
+      alignItems: 'center',
+      gap: theme.spacing(1),
+    },
+  },
+  sectionContent: {
+    padding: `${theme.spacing(1)} 0 !important`,
+  },
   toolCard: {
     marginBottom: theme.spacing(1),
     cursor: 'grab',
@@ -46,16 +70,46 @@ const useStyles = makeStyles()((theme) => ({
     cursor: 'grab',
     transition: 'all 0.2s ease-in-out',
     border: `1px solid ${theme.palette.secondary.main}`,
-    backgroundColor: theme.palette.secondary.light,
+    backgroundColor: theme.palette.background.paper,
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
+      backgroundColor: theme.palette.secondary.light,
     },
     '&:active': {
       cursor: 'grabbing',
     },
   },
-
+  inputCard: {
+    marginBottom: theme.spacing(1),
+    cursor: 'grab',
+    transition: 'all 0.2s ease-in-out',
+    border: `1px solid ${theme.palette.info.main}`,
+    backgroundColor: theme.palette.background.paper,
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: theme.shadows[4],
+      backgroundColor: theme.palette.info.light,
+    },
+    '&:active': {
+      cursor: 'grabbing',
+    },
+  },
+  outputCard: {
+    marginBottom: theme.spacing(1),
+    cursor: 'grab',
+    transition: 'all 0.2s ease-in-out',
+    border: `1px solid ${theme.palette.success.main}`,
+    backgroundColor: theme.palette.background.paper,
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: theme.shadows[4],
+      backgroundColor: theme.palette.success.light,
+    },
+    '&:active': {
+      cursor: 'grabbing',
+    },
+  },
   itemHeader: {
     display: 'flex',
     alignItems: 'center',
@@ -96,29 +150,86 @@ interface ToolPaletteProps {
   onToolDragStart?: (tool: ToolDefinition) => void;
 }
 
+interface ComponentDefinition {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  subType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: React.ComponentType<any>;
+  inputSchema?: string;
+  outputSchema?: string;
+}
+
+// Define built-in input/output components
+const INPUT_COMPONENTS: ComponentDefinition[] = [
+  {
+    id: 'chat-input',
+    name: 'Chat Input',
+    description: 'Interactive chat interface for user input',
+    type: 'input',
+    subType: 'chat',
+    icon: ChatIcon,
+  },
+  {
+    id: 'text-input',
+    name: 'Text Input',
+    description: 'Text field for structured text input',
+    type: 'input',
+    subType: 'text',
+    icon: TextIcon,
+  },
+];
+
+const OUTPUT_COMPONENTS: ComponentDefinition[] = [
+  {
+    id: 'chat-output',
+    name: 'Chat Output',
+    description: 'Display chat responses and conversations',
+    type: 'output',
+    subType: 'chat',
+    icon: ChatIcon,
+  },
+  {
+    id: 'text-output',
+    name: 'Text Output',
+    description: 'Display formatted text output',
+    type: 'output',
+    subType: 'text',
+    icon: TextIcon,
+  },
+];
+
 const ToolPalette: React.FC<ToolPaletteProps> = ({ onToolDragStart }) => {
   const { classes } = useStyles();
   const { tools, loading, error, refetch } = useTools();
 
-  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, tool: ToolDefinition) => {
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, tool: ToolDefinition | ComponentDefinition) => {
     console.log('Drag started for tool:', tool.name);
     // Set drag data with a specific key to avoid conflicts
     event.dataTransfer.setData('application/tool-data', JSON.stringify(tool));
     event.dataTransfer.effectAllowed = 'move';
 
     // Call optional callback
-    onToolDragStart?.(tool);
+    if ('category' in tool) {
+      onToolDragStart?.(tool as ToolDefinition);
+    }
   };
 
   const handleDragEnd = (event: React.DragEvent<HTMLDivElement>) => {
     event.dataTransfer.clearData();
   };
 
+  // Filter tools by type
+  const regularTools = tools.filter(tool => tool.type !== 'agent');
+  const agents = tools.filter(tool => tool.type === 'agent');
+
   if (loading) {
     return (
       <Box className={classes.palette}>
         <Typography variant="h6" className={classes.header}>
-          Tool Palette
+          Component Palette
         </Typography>
         <div className={classes.loadingContainer}>
           <CircularProgress />
@@ -130,7 +241,7 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({ onToolDragStart }) => {
   return (
     <Box className={classes.palette}>
       <Typography variant="h6" className={classes.header}>
-        Tool Palette
+        Component Palette
       </Typography>
 
       {error && (
@@ -152,50 +263,208 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({ onToolDragStart }) => {
       )}
 
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Drag tools to the canvas to build your workflow
+        Drag components to the canvas to build your workflow
       </Typography>
 
       <Divider sx={{ my: 2 }} />
 
-      {tools.map((tool) => (
-        <Card
-          key={tool.id}
-          className={tool.type === 'agent' ? classes.agentCard : classes.toolCard}
-          draggable
-          onDragStart={(e) => handleDragStart(e, tool)}
-          onDragEnd={handleDragEnd}
+      {/* Tools Section */}
+      <Accordion defaultExpanded className={classes.section}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          className={classes.sectionHeader}
         >
-          <CardContent className={classes.toolContent}>
-            <div className={classes.itemHeader}>
-              {tool.type === 'agent' ? (
-                <AgentIcon className={classes.itemIcon} color="secondary" />
-              ) : (
-                <ToolIcon className={classes.itemIcon} color="primary" />
-              )}
-              <Typography variant="subtitle2" className={classes.toolName}>
-                {tool.name}
-              </Typography>
-            </div>
-            <Typography variant="body2" className={classes.toolDescription}>
-              {tool.description}
+          <ToolIcon color="primary" />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Tools ({regularTools.length})
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails className={classes.sectionContent}>
+          {regularTools.map((tool) => (
+            <Card
+              key={tool.id}
+              className={classes.toolCard}
+              draggable
+              onDragStart={(e) => handleDragStart(e, tool)}
+              onDragEnd={handleDragEnd}
+            >
+              <CardContent className={classes.toolContent}>
+                <div className={classes.itemHeader}>
+                  <ToolIcon className={classes.itemIcon} color="primary" />
+                  <Typography variant="subtitle2" className={classes.toolName}>
+                    {tool.name}
+                  </Typography>
+                </div>
+                <Typography variant="body2" className={classes.toolDescription}>
+                  {tool.description}
+                </Typography>
+                {tool.category && (
+                  <Chip
+                    label={tool.category}
+                    size="small"
+                    variant="outlined"
+                    className={classes.categoryChip}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          {regularTools.length === 0 && (
+            <Typography variant="body2" color="text.secondary" align="center">
+              No tools available
             </Typography>
-            {tool.category && (
-              <Chip
-                label={tool.category}
-                size="small"
-                variant="outlined"
-                className={classes.categoryChip}
-              />
-            )}
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        </AccordionDetails>
+      </Accordion>
 
-      {tools.length === 0 && !loading && !error && (
-        <Typography variant="body2" color="text.secondary" align="center">
-          No tools available
-        </Typography>
-      )}
+      {/* Inputs Section */}
+      <Accordion defaultExpanded className={classes.section}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          className={classes.sectionHeader}
+        >
+          <InputIcon color="info" />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Inputs ({INPUT_COMPONENTS.length})
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails className={classes.sectionContent}>
+          {INPUT_COMPONENTS.map((component) => {
+            const IconComponent = component.icon;
+            return (
+              <Card
+                key={component.id}
+                className={classes.inputCard}
+                draggable
+                onDragStart={(e) => handleDragStart(e, {
+                  ...component,
+                  inputSchema: '{}',
+                  outputSchema: '{}',
+                })}
+                onDragEnd={handleDragEnd}
+              >
+                <CardContent className={classes.toolContent}>
+                  <div className={classes.itemHeader}>
+                    <IconComponent className={classes.itemIcon} color="info" />
+                    <Typography variant="subtitle2" className={classes.toolName}>
+                      {component.name}
+                    </Typography>
+                  </div>
+                  <Typography variant="body2" className={classes.toolDescription}>
+                    {component.description}
+                  </Typography>
+                  <Chip
+                    label="input"
+                    size="small"
+                    variant="outlined"
+                    className={classes.categoryChip}
+                    color="info"
+                  />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Outputs Section */}
+      <Accordion defaultExpanded className={classes.section}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          className={classes.sectionHeader}
+        >
+          <OutputIcon color="success" />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Outputs ({OUTPUT_COMPONENTS.length})
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails className={classes.sectionContent}>
+          {OUTPUT_COMPONENTS.map((component) => {
+            const IconComponent = component.icon;
+            return (
+              <Card
+                key={component.id}
+                className={classes.outputCard}
+                draggable
+                onDragStart={(e) => handleDragStart(e, {
+                  ...component,
+                  inputSchema: '{}',
+                  outputSchema: '{}',
+                })}
+                onDragEnd={handleDragEnd}
+              >
+                <CardContent className={classes.toolContent}>
+                  <div className={classes.itemHeader}>
+                    <IconComponent className={classes.itemIcon} color="success" />
+                    <Typography variant="subtitle2" className={classes.toolName}>
+                      {component.name}
+                    </Typography>
+                  </div>
+                  <Typography variant="body2" className={classes.toolDescription}>
+                    {component.description}
+                  </Typography>
+                  <Chip
+                    label="output"
+                    size="small"
+                    variant="outlined"
+                    className={classes.categoryChip}
+                    color="success"
+                  />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Agents Section */}
+      <Accordion defaultExpanded className={classes.section}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          className={classes.sectionHeader}
+        >
+          <AgentIcon color="secondary" />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Agents ({agents.length})
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails className={classes.sectionContent}>
+          {agents.map((tool) => (
+            <Card
+              key={tool.id}
+              className={classes.agentCard}
+              draggable
+              onDragStart={(e) => handleDragStart(e, tool)}
+              onDragEnd={handleDragEnd}
+            >
+              <CardContent className={classes.toolContent}>
+                <div className={classes.itemHeader}>
+                  <AgentIcon className={classes.itemIcon} color="secondary" />
+                  <Typography variant="subtitle2" className={classes.toolName}>
+                    {tool.name}
+                  </Typography>
+                </div>
+                <Typography variant="body2" className={classes.toolDescription}>
+                  {tool.description}
+                </Typography>
+                {tool.category && (
+                  <Chip
+                    label={tool.category}
+                    size="small"
+                    variant="outlined"
+                    className={classes.categoryChip}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          {agents.length === 0 && (
+            <Typography variant="body2" color="text.secondary" align="center">
+              No agents available
+            </Typography>
+          )}
+        </AccordionDetails>
+      </Accordion>
     </Box>
   );
 };
