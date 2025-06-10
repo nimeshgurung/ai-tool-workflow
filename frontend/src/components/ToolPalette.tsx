@@ -34,7 +34,7 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: theme.palette.background.paper,
     borderRight: `1px solid ${theme.palette.divider}`,
     overflow: 'auto',
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     flexShrink: 0,
   },
   header: {
@@ -45,26 +45,36 @@ const useStyles = makeStyles()((theme) => ({
     '& .MuiAccordion-root': {
       width: '100%',
       margin: 0,
+      boxShadow: 'none !important',
+      border: `1px solid ${theme.palette.divider}`,
+      borderRadius: theme.spacing(1),
+      '&:not(:last-child)': {
+        borderBottom: `1px solid ${theme.palette.divider}`,
+      },
+      '&.Mui-expanded': {
+        boxShadow: 'none !important',
+      },
     },
     '& .MuiAccordion-root:before': {
       display: 'none',
     },
+    '& .MuiAccordionSummary-root': {
+      boxShadow: 'none !important',
+    },
+    '& .MuiAccordionDetails-root': {
+      boxShadow: 'none !important',
+    },
   },
   sectionHeader: {
     backgroundColor: theme.palette.grey[50],
-    margin: `0 -${theme.spacing(2)}`,
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
+    minHeight: 48,
     '& .MuiAccordionSummary-content': {
       alignItems: 'center',
       gap: theme.spacing(1),
     },
   },
   sectionContent: {
-    padding: `${theme.spacing(1)} 0 !important`,
-    margin: `0 -${theme.spacing(2)}`,
-    paddingLeft: `${theme.spacing(2)} !important`,
-    paddingRight: `${theme.spacing(2)} !important`,
+    padding: `${theme.spacing(1)} ${theme.spacing(2)} !important`,
   },
   toolCard: {
     marginBottom: theme.spacing(1),
@@ -384,7 +394,13 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({ onToolDragStart }) => {
       </Accordion>
 
       {/* Outputs Section */}
-      <Accordion defaultExpanded className={classes.section}>
+      <Accordion defaultExpanded className={classes.section} slotProps={{
+        root: {
+          sx: {
+            boxShadow: 'none !important',
+          },
+        },
+      }}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           className={classes.sectionHeader}

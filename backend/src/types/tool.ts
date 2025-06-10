@@ -17,9 +17,9 @@ export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
 // Mock tool definitions for initial development
 export const MOCK_TOOLS: ToolDefinition[] = [
   {
-    id: 'bing-search',
-    name: 'Bing Search API',
-    description: 'Call the Bing Search API to search the web for information',
+    id: 'search-issues',
+    name: 'Search Issues',
+    description: 'Call the Search Issues API to search for issues in Blueprint',
     inputSchema: JSON.stringify({
       type: 'object',
       properties: {
@@ -43,9 +43,8 @@ export const MOCK_TOOLS: ToolDefinition[] = [
           items: {
             type: 'object',
             properties: {
-              title: { type: 'string' },
-              url: { type: 'string' },
-              snippet: { type: 'string' }
+              summary: { type: 'string' },
+              id: { type: 'string' },
             }
           }
         }
@@ -56,20 +55,15 @@ export const MOCK_TOOLS: ToolDefinition[] = [
     type: 'tool'
   },
   {
-    id: 'exa-search',
-    name: 'Exa Search',
-    description: 'Exa Search toolkit for search and content retrieval',
+    id: 'risks-issues-search',
+    name: 'Search Risks and Issues',
+    description: 'Call the Search Risks and Issues API to search for risks and issues in Blueprint',
     inputSchema: JSON.stringify({
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'The search query'
-        },
-        type: {
-          type: 'string',
-          enum: ['neural', 'keyword'],
-          description: 'Type of search to perform'
+          description: 'Team name or issue ID'
         },
         numResults: {
           type: 'number',
@@ -88,9 +82,12 @@ export const MOCK_TOOLS: ToolDefinition[] = [
             type: 'object',
             properties: {
               title: { type: 'string' },
-              url: { type: 'string' },
-              content: { type: 'string' },
-              score: { type: 'number' }
+              id: { type: 'string' },
+              summary: { type: 'string' },
+              description: { type: 'string' },
+              status: { type: 'string' },
+              priority: { type: 'string' },
+              dueDate: { type: 'string' },
             }
           }
         }
@@ -101,138 +98,143 @@ export const MOCK_TOOLS: ToolDefinition[] = [
     type: 'tool'
   },
   {
-    id: 'web-scraper',
-    name: 'Web Scraper',
-    description: 'Extract content from web pages',
+    id: 'search-teams',
+    name: 'Search Teams',
+    description: 'Search for teams in the platform.',
     inputSchema: JSON.stringify({
       type: 'object',
       properties: {
-        url: {
+        query: {
           type: 'string',
-          description: 'The URL to scrape'
-        },
-        selector: {
-          type: 'string',
-          description: 'CSS selector for content extraction'
+          description: 'The search query for team names.'
         }
       },
-      required: ['url']
+      required: ['query']
     }),
     outputSchema: JSON.stringify({
       type: 'object',
       properties: {
-        content: { type: 'string' },
-        title: { type: 'string' },
-        metadata: { type: 'object' }
-      }
-    }),
-    category: 'data',
-    version: '1.0.0',
-    type: 'tool'
-  },
-  {
-    id: 'email-sender',
-    name: 'Email Sender',
-    description: 'Send emails with customizable content',
-    inputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        to: {
-          type: 'string',
-          description: 'Recipient email address'
-        },
-        subject: {
-          type: 'string',
-          description: 'Email subject'
-        },
-        body: {
-          type: 'string',
-          description: 'Email body content'
-        }
-      },
-      required: ['to', 'subject', 'body']
-    }),
-    outputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        messageId: { type: 'string' },
-        status: { type: 'string' },
-        timestamp: { type: 'string' }
-      }
-    }),
-    category: 'communication',
-    version: '1.0.0',
-    type: 'tool'
-  },
-  {
-    id: 'data-processor',
-    name: 'Data Processor',
-    description: 'Process and transform data in various formats',
-    inputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        data: {
-          type: 'object',
-          description: 'The data to process'
-        },
-        operation: {
-          type: 'string',
-          enum: ['filter', 'transform', 'aggregate', 'sort'],
-          description: 'The operation to perform'
-        },
-        parameters: {
-          type: 'object',
-          description: 'Operation-specific parameters'
-        }
-      },
-      required: ['data', 'operation']
-    }),
-    outputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        processedData: { type: 'object' },
-        summary: { type: 'string' },
-        recordsProcessed: { type: 'number' }
-      }
-    }),
-    category: 'data',
-    version: '1.0.0',
-    type: 'tool'
-  },
-  {
-    id: 'file-reader',
-    name: 'File Reader',
-    description: 'Read and parse files in various formats',
-    inputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        filePath: {
-          type: 'string',
-          description: 'Path to the file to read'
-        },
-        format: {
-          type: 'string',
-          enum: ['json', 'csv', 'txt', 'xml'],
-          description: 'Expected file format'
-        }
-      },
-      required: ['filePath']
-    }),
-    outputSchema: JSON.stringify({
-      type: 'object',
-      properties: {
-        content: { type: 'object' },
-        metadata: {
-          type: 'object',
-          properties: {
-            size: { type: 'number' },
-            lastModified: { type: 'string' },
-            format: { type: 'string' }
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' }
+            }
           }
         }
       }
     }),
-    category: 'file',
+    category: 'search',
+    version: '1.0.0',
+    type: 'tool'
+  },
+  {
+    id: 'search-objectives',
+    name: 'Search Objectives',
+    description: 'Search for objectives in the platform.',
+    inputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query for objectives.'
+        }
+      },
+      required: ['query']
+    }),
+    outputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              description: { type: 'string' }
+            }
+          }
+        }
+      }
+    }),
+    category: 'search',
+    version: '1.0.0',
+    type: 'tool'
+  },
+  {
+    id: 'search-key-results',
+    name: 'Search Key Results',
+    description: 'Search for key results in the platform.',
+    inputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query for key results.'
+        }
+      },
+      required: ['query']
+    }),
+    outputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              status: { type: 'string' }
+            }
+          }
+        }
+      }
+    }),
+    category: 'search',
+    version: '1.0.0',
+    type: 'tool'
+  },
+  {
+    id: 'create-issue',
+    name: 'Create Issue',
+    description: 'Create a new issue in Gitlab.',
+    inputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'The title of the issue.'
+        },
+        description: {
+          type: 'string',
+          description: 'The description of the issue.'
+        },
+        project_id: {
+          type: 'string',
+          description: 'The ID of the project to create the issue in.'
+        },
+        labels: {
+          type: 'string',
+          description: 'Comma-separated list of labels for the issue.'
+        }
+      },
+      required: ['title', 'project_id']
+    }),
+    outputSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        iid: { type: 'number' },
+        project_id: { type: 'number' },
+        title: { type: 'string' },
+        web_url: { type: 'string' }
+      }
+    }),
+    category: 'creation',
     version: '1.0.0',
     type: 'tool'
   },
