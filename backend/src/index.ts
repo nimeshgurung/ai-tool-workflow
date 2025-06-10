@@ -4,7 +4,7 @@ import toolsRouter from './routes/tools';
 import workflowsRouter from './routes/workflows';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8765;
 
 // Middleware
 app.use(cors());
