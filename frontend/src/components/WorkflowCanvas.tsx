@@ -80,7 +80,7 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
     severity: 'success' | 'error' | 'info';
   }>({ open: false, message: '', severity: 'info' });
 
-  const { project } = useReactFlow();
+  const { project, setCenter } = useReactFlow();
 
     const onEdgesDelete = useCallback(
     (deletedEdges: Edge[]) => {
@@ -272,6 +272,15 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
           message: `Added ${tool.name} to workflow`,
           severity: 'success',
         });
+
+        // Center view on the new node and set zoom to 100%
+        setTimeout(() => {
+          setCenter(newNode.position.x, newNode.position.y, {
+            zoom: 1,
+            duration: 300,
+          });
+        }, 100);
+
       } catch (error) {
         console.error('Error parsing dropped tool data:', error);
         setNotification({
@@ -281,7 +290,7 @@ const WorkflowCanvasInner: React.FC<WorkflowCanvasProps> = ({ onWorkflowSave }) 
         });
       }
     },
-    [project, setNodes]
+    [project, setNodes, setCenter]
   );
 
   const handleSaveWorkflow = async () => {
