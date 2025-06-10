@@ -20,11 +20,13 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
-  type SelectChangeEvent
+  type SelectChangeEvent,
+  CircularProgress
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { Settings as SettingsIcon, SmartToy as AgentIcon, Edit as EditIcon } from '@mui/icons-material';
 import type { ToolNodeData } from '../types/workflow';
+import { useTools } from '../hooks/useTools';
 
 const useStyles = makeStyles()((theme) => ({
   agentCard: {
@@ -113,22 +115,14 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-// Mock available tools for the agent configuration
-const AVAILABLE_TOOLS = [
-  { id: 'bing-search', name: 'Bing Search API' },
-  { id: 'exa-search', name: 'Exa Search' },
-  { id: 'web-scraper', name: 'Web Scraper' },
-  { id: 'email-sender', name: 'Email Sender' },
-  { id: 'data-processor', name: 'Data Processor' },
-  { id: 'file-reader', name: 'File Reader' },
-];
-
-
-
 const AgentNode: React.FC<NodeProps<ToolNodeData>> = ({ data, selected }) => {
   const { classes, cx } = useStyles();
   const [configOpen, setConfigOpen] = useState(false);
   const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
+
+  // Fetch available tools
+  const { tools: allTools, loading: toolsLoading } = useTools();
+  const availableTools = allTools.filter(t => t.type !== 'agent');
 
   // Agent configuration state
   const [instructions, setInstructions] = useState(
@@ -172,7 +166,7 @@ const AgentNode: React.FC<NodeProps<ToolNodeData>> = ({ data, selected }) => {
   };
 
   const getAssignedToolNames = () => {
-    return AVAILABLE_TOOLS
+    return availableTools
       .filter(tool => assignedTools.includes(tool.id))
       .map(tool => tool.name);
   };
@@ -203,8 +197,6 @@ const AgentNode: React.FC<NodeProps<ToolNodeData>> = ({ data, selected }) => {
               <SettingsIcon />
             </IconButton>
           </div>
-
-
 
           {/* Agent Instructions Section */}
           <div className={classes.configSection}>
@@ -302,28 +294,34 @@ const AgentNode: React.FC<NodeProps<ToolNodeData>> = ({ data, selected }) => {
           <Typography variant="body2" color="textSecondary" gutterBottom>
             Select the tools this agent can use:
           </Typography>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Available Tools</InputLabel>
-            <Select
-              multiple
-              value={assignedTools}
-              onChange={handleToolsChange}
-              input={<OutlinedInput label="Available Tools" />}
-              renderValue={(selected) =>
-                AVAILABLE_TOOLS
-                  .filter(tool => selected.includes(tool.id))
-                  .map(tool => tool.name)
-                  .join(', ')
-              }
-            >
-              {AVAILABLE_TOOLS.map((tool) => (
-                <MenuItem key={tool.id} value={tool.id}>
-                  <Checkbox checked={assignedTools.indexOf(tool.id) > -1} />
-                  <ListItemText primary={tool.name} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {toolsLoading ? (
+            <Box display="flex" justifyContent="center" my={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Available Tools</InputLabel>
+              <Select
+                multiple
+                value={assignedTools}
+                onChange={handleToolsChange}
+                input={<OutlinedInput label="Available Tools" />}
+                renderValue={(selected) =>
+                  availableTools
+                    .filter(tool => selected.includes(tool.id))
+                    .map(tool => tool.name)
+                    .join(', ')
+                }
+              >
+                {availableTools.map((tool) => (
+                  <MenuItem key={tool.id} value={tool.id}>
+                    <Checkbox checked={assignedTools.indexOf(tool.id) > -1} />
+                    <ListItemText primary={tool.name} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setToolsDialogOpen(false)}>Cancel</Button>
